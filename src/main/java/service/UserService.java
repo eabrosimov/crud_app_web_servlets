@@ -9,7 +9,7 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
 
-    public UserService(){
+    public UserService() {
         userRepository = new HibernateUserRepositoryImpl();
     }
 

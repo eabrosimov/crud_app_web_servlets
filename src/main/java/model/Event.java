@@ -19,6 +19,11 @@ public class Event {
     public Event() {
     }
 
+    public Event(User user, File file) {
+        this.user = user;
+        this.file = file;
+    }
+
     public Integer getId() {
         return id;
     }
@@ -47,7 +52,7 @@ public class Event {
     public String toString() {
         return "Event{" +
                 "id=" + id +
-                ", user=User{" + "id=" +user.getId() +
+                ", user=User{" + "id=" + user.getId() +
                 ", name=" + user.getName() + "}" +
                 ", file=" + file +
                 '}';

@@ -1,22 +1,26 @@
 package controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Event;
 import model.File;
 import model.User;
 import service.EventService;
 import service.FileService;
 import service.UserService;
-import utility.NumberChecker;
+import utility.NumberValidator;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
 
-@WebServlet("/events")
+@WebServlet("/v1/events/*")
 public class EventRestControllerV1 extends HttpServlet {
     EventService eventService = new EventService();
     UserService userService = new UserService();
@@ -24,134 +28,93 @@ public class EventRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
-
-        String userId = req.getParameter("userId");
-        String fileId = req.getParameter("fileId");
-        if (NumberChecker.isInteger(userId) && NumberChecker.isInteger(fileId)) {
-            int uId = Integer.parseInt(userId);
-            int fId = Integer.parseInt(fileId);
-            Event event = new Event();
-            User user = userService.getById(uId);
-            File file = fileService.getById(fId);
-            if(user != null && file != null){
-                event.setUser(user);
-                event.setFile(file);
-                event = eventService.save(event);
-                writer.println("<h1>Успешно</h1>");
-                writer.print(event);
-            } else {
-                writer.println("<h1>Неудачно</h1>");
-                writer.print("Такой пользователь или файл не существует");
+        Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
+        String userId = jsonElements.get("userId");
+        String fileId = jsonElements.get("fileId");
+        if (req.getPathInfo() == null && NumberValidator.isInteger(userId) && NumberValidator.isInteger(fileId)) {
+            User user = userService.getById(Integer.parseInt(userId));
+            File file = fileService.getById(Integer.parseInt(fileId));
+            if (user != null && file != null) {
+                Event event = new Event(user, file);
+                eventService.save(event);
+                writer.println(objectMapper.writeValueAsString(event));
+                return;
             }
-
-        } else {
-            writer.println("<h1>Неудачно</h1>");
-            writer.print("Убедитесь, что:<br>" +
-                    "userId и fileId содержат только цифры<br>" + "" +
-                    "- название параметров 'userId' и 'fileId' соответственно");
         }
+        resp.setStatus(404);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
         PrintWriter writer = resp.getWriter();
-
-        String paramId = req.getParameter("id");
-        if(paramId == null){
-            List<Event> events = eventService.getAll();
-            for(Event e: events){
-                writer.println(e + "<br>");
-            }
-        } else {
-            if (NumberChecker.isInteger(paramId)) {
-                int id = Integer.parseInt(paramId);
+        String paramId = req.getPathInfo();
+        if (paramId != null) {
+            if (NumberValidator.isInteger(paramId.substring(1))) {
+                int id = Integer.parseInt(paramId.substring(1));
                 Event event = eventService.getById(id);
-                if (event == null) {
-                    writer.println("<h1>Неудачно</h1>");
-                    writer.print("Событие с таким id не сущесвтует");
-                } else {
-                    writer.print(event);
+                if (event != null) {
+                    writer.println(objectMapper.writeValueAsString(event));
+                    return;
                 }
-            } else {
-                writer.println("<h1>Неудачно</h1>");
-                writer.print("Убедитесь, что:<br>" +
-                        "- id содержат только цифры<br>" + "" +
-                        "- название параметра 'id'");
             }
+            resp.setStatus(404);
+        } else {
+            List<Event> events = eventService.getAll();
+            writer.println(objectMapper.writeValueAsString(events));
         }
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
-
-        String paramId = req.getParameter("id");
-        String userId = req.getParameter("userId");
-        String fileId = req.getParameter("fileId");
-        if (NumberChecker.isInteger(paramId)) {
-            int id = Integer.parseInt(paramId);
-            Event event = eventService.getById(id);
-            if(event == null) {
-                writer.println("<h1>Неудачно</h1>");
-                writer.print("Файл с таким id не существует");
-            } else {
-                if(userId != null) {
-                    if(NumberChecker.isInteger(userId)){
-                        int uId = Integer.parseInt(userId);
-                        User user = userService.getById(uId);
-                        if(user == null){
-                            writer.println("<h1>Неудачно</h1>");
-                            writer.print("Пользователь с таким id не существует");
-                            return;
-                        } else {
-                            event.setUser(user);
-                        }
-                    }
+        Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
+        String eventId = jsonElements.get("eventId");
+        String userId = jsonElements.get("userId");
+        String fileId = jsonElements.get("fileId");
+        if (req.getPathInfo() == null && NumberValidator.isInteger(eventId)) {
+            Event event = eventService.getById(Integer.parseInt(eventId));
+            if (event != null && NumberValidator.isInteger(userId)) {
+                User user = userService.getById(Integer.parseInt(userId));
+                if (user != null) {
+                    event.setUser(user);
+                } else {
+                    resp.setStatus(404);
+                    return;
                 }
-                if(fileId != null) {
-                    if(NumberChecker.isInteger(fileId)){
-                        int fId = Integer.parseInt(fileId);
-                        File file = fileService.getById(fId);
-                        if(file == null){
-                            writer.println("<h1>Неудачно</h1>");
-                            writer.print("Файл с таким id не существует");
-                            return;
-                        } else {
-                            event.setFile(file);
-                        }
-                    }
-                }
-                event = eventService.update(event);
-                writer.println("<h1>Успешно</h1>");
-                writer.print(event);
             }
-        } else {
-            writer.println("<h1>Неудачно</h1>");
-            writer.print("id должен содержать только цифры");
+            if (event != null && NumberValidator.isInteger(fileId)) {
+                File file = fileService.getById(Integer.parseInt(fileId));
+                if (file != null) {
+                    event.setFile(file);
+                } else {
+                    resp.setStatus(404);
+                    return;
+                }
+            }
+            event = eventService.update(event);
+            if (event != null) {
+                writer.println(objectMapper.writeValueAsString(event));
+                return;
+            }
         }
+        resp.setStatus(404);
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        PrintWriter writer = resp.getWriter();
-
-        String paramId = req.getParameter("id");
-        if(NumberChecker.isInteger(paramId)) {
-            int id = Integer.parseInt(paramId);
-            boolean isDeleted = eventService.deleteById(id);
-            if(isDeleted) {
-                writer.println("<h1>Успешно</h1>");
-                writer.println("Событие удалено");
-            } else {
-                writer.println("<h1>Неудачно</h1>");
-                writer.println("Событие с таким id не сущесвтует");
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+        String paramId = req.getPathInfo();
+        if (paramId != null && NumberValidator.isInteger(paramId.substring(1))) {
+            int id = Integer.parseInt(paramId.substring(1));
+            if (eventService.deleteById(id)) {
+                return;
             }
-        } else {
-            writer.println("<h1>Неудачно</h1>");
-            writer.print("Убедитесь, что:<br>" +
-                    "- id содержат только цифры<br>" + "" +
-                    "- название параметра 'id'");
         }
+        resp.setStatus(404);
     }
 }

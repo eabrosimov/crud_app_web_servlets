@@ -12,7 +12,7 @@ import java.io.IOException;
 public class ResponseFilter extends HttpFilter {
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-        res.setContentType("text/html");
+        res.setContentType("application/json");
         res.setCharacterEncoding("UTF-8");
         super.doFilter(req, res, chain);
     }

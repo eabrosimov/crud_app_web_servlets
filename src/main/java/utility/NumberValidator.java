@@ -1,10 +1,10 @@
 package utility;
 
-public class NumberChecker {
+public class NumberValidator {
     public static boolean isInteger(String s) {
         try {
             Integer.parseInt(s);
-        } catch(NumberFormatException | NullPointerException e) {
+        } catch (NumberFormatException | NullPointerException e) {
             return false;
         }
 

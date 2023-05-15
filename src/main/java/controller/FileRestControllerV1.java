@@ -1,157 +1,122 @@
 package controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import model.Event;
 import model.File;
+import model.User;
+import service.EventService;
 import service.FileService;
-import utility.NumberChecker;
+import service.UserService;
+import utility.NameValidator;
+import utility.NumberValidator;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
 
-@WebServlet("/files")
+@WebServlet("/v1/files/*")
 public class FileRestControllerV1 extends HttpServlet {
     FileService fileService = new FileService();
+    UserService userService = new UserService();
+    EventService eventService = new EventService();
+
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
-
-        String name = req.getParameter("name");
-        String filePath = req.getParameter("filePath");
-        if (name == null || name.isEmpty() || name.isBlank() || name.length() > 50 ||
-                filePath == null || filePath.isEmpty() || filePath.isBlank() ||
-                filePath.length() > 100 || !filePath.startsWith(":/", 1)) {
-
-            writer.println("<h1>Неверный формат</h1>");
-            writer.println("Проверьте, что:<br>" +
-                    "- название параметров 'name' и 'filePath' соответственно<br>" +
-                    "- имя и путь не пустые<br>" +
-                    "- путь начинается с 'some_disk:/'<br>" +
-                    "- имя не превышает 50 символов<br>" +
-                    "- путь не превышает 100 символов");
-        } else {
-            File file = new File();
-            file.setName(name);
-            file.setFilePath(filePath);
-            file = fileService.save(file);
-            if(file == null){
-                writer.println("<h1>Неудачно</h1>");
-                writer.print("Файл с таким именем и путем уже существует");
-            } else {
-                writer.println("<h1>Успешно</h1>");
-                writer.print(file);
+        Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
+        String userId = jsonElements.get("id");
+        String fileName = jsonElements.get("name");
+        String filePath = jsonElements.get("filePath");
+        if (req.getPathInfo() == null && NameValidator.isValidFileName(fileName)
+                && NameValidator.isValidFilePath(filePath) && NumberValidator.isInteger(userId)) {
+            User user = userService.getById(Integer.parseInt(userId));
+            File file = new File(fileName, filePath);
+            if (user != null && fileService.save(file) != null) {
+                Event event = new Event(user, file);
+                eventService.save(event);
+                writer.println(objectMapper.writeValueAsString(file));
+                return;
             }
         }
+        resp.setStatus(404);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
         PrintWriter writer = resp.getWriter();
-
-        String paramId = req.getParameter("id");
-        if(paramId == null){
-            List<File> files = fileService.getAll();
-            for(File f: files){
-                writer.println(f + "<br>");
-            }
-        } else {
-            if (NumberChecker.isInteger(paramId)) {
-                int id = Integer.parseInt(paramId);
+        String paramId = req.getPathInfo();
+        if (paramId != null) {
+            if (NumberValidator.isInteger(paramId.substring(1))) {
+                int id = Integer.parseInt(paramId.substring(1));
                 File file = fileService.getById(id);
-                if (file == null) {
-                    writer.println("<h1>Неудачно</h1>");
-                    writer.print("Файл с таким id не сущесвтует");
-                } else {
-                    writer.print(file);
+                if (file != null) {
+                    writer.println(objectMapper.writeValueAsString(file));
+                    return;
                 }
-            } else {
-                writer.println("<h1>Неудачно</h1>");
-                writer.print("Убедитесь, что:<br>" +
-                        "- id содержат только цифры<br>" + "" +
-                        "- название параметра 'id'");
             }
+            resp.setStatus(404);
+        } else {
+            List<File> files = fileService.getAll();
+            writer.println(objectMapper.writeValueAsString(files));
         }
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
-
-        String paramId = req.getParameter("id");
-        String name = req.getParameter("name");
-        String filePath = req.getParameter("filePath");
-        if(NumberChecker.isInteger(paramId)) {
-            int id = Integer.parseInt(paramId);
-            File file = fileService.getById(id);
-            if(file == null) {
-                writer.println("<h1>Неудачно</h1>");
-                writer.print("Файл с таким id не существует");
-            } else {
-                if(name != null){
-                    if (name.isEmpty() || name.isBlank() || name.length() > 50) {
-                        writer.println("<h1>Неверный формат имени</h1>");
-                        writer.println("Проверьте, что:<br>" +
-                                "- имя не пустое<br>" +
-                                "- не превышет 50 символов");
-                        return;
-                    } else {
-                        file.setName(name);
-                    }
-                }
-
-                if(filePath != null){
-                    if (filePath.isEmpty() || filePath.isBlank() ||
-                            filePath.length() > 10 || !filePath.startsWith(":/", 1)) {
-                        writer.println("<h1>Неверный формат пути</h1>");
-                        writer.println("Проверьте, что:<br>" +
-                                "- путь не пустой<br>" +
-                                "- начинается с 'some_disk:/'<br>" +
-                                "- не превышет 100 символов");
-                        return;
-                    } else {
-                        file.setFilePath(filePath);
-                    }
-                }
-
-                file = fileService.update(file);
-                if(file == null) {
-                    writer.println("<h1>Неудачно</h1>");
-                    writer.print("Файл с таким именем и путем уже существует");
+        Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
+        String paramId = jsonElements.get("id");
+        String name = jsonElements.get("name");
+        String filePath = jsonElements.get("filePath");
+        if (req.getPathInfo() == null && NumberValidator.isInteger(paramId)) {
+            File file = fileService.getById(Integer.parseInt(paramId));
+            if (file != null && name != null) {
+                if (NameValidator.isValidFileName(name)) {
+                    file.setName(name);
                 } else {
-                    writer.println("<h1>Успешно</h1>");
-                    writer.print(file);
+                    resp.setStatus(404);
+                    return;
                 }
             }
-        } else {
-            writer.println("<h1>Неудачно</h1>");
-            writer.print("id должен содержать только цифры");
+            if (file != null && filePath != null) {
+                if (NameValidator.isValidFilePath(filePath)) {
+                    file.setFilePath(filePath);
+                } else {
+                    resp.setStatus(404);
+                    return;
+                }
+            }
+            file = fileService.update(file);
+            if (file != null) {
+                writer.println(objectMapper.writeValueAsString(file));
+                return;
+            }
         }
+        resp.setStatus(404);
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        PrintWriter writer = resp.getWriter();
-
-        String paramId = req.getParameter("id");
-        if (NumberChecker.isInteger(paramId)) {
-            int id = Integer.parseInt(paramId);
-            boolean isDeleted = fileService.deleteById(id);
-            if(isDeleted) {
-                writer.println("<h1>Успешно</h1>");
-                writer.println("Файл удален");
-            } else {
-                writer.println("<h1>Неудачно</h1>");
-                writer.println("Файл с таким id не сущесвтует");
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+        String paramId = req.getPathInfo();
+        if (paramId != null && NumberValidator.isInteger(paramId.substring(1))) {
+            int id = Integer.parseInt(paramId.substring(1));
+            if (fileService.deleteById(id)) {
+                return;
             }
-        } else {
-            writer.println("<h1>Неудачно</h1>");
-            writer.print("Убедитесь, что:<br>" +
-                    "- id содержат только цифры<br>" + "" +
-                    "- название параметра 'id'");
         }
+        resp.setStatus(404);
     }
 }

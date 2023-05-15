@@ -53,7 +53,7 @@ public class HibernateEventRepositoryImpl implements EventRepository {
             session.beginTransaction();
             Query query = session.createQuery(hql);
             query.setParameter("id", integer);
-            if(query.executeUpdate() > 0){
+            if (query.executeUpdate() > 0) {
                 return true;
             }
         }

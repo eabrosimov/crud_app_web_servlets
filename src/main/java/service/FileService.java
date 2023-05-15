@@ -9,7 +9,7 @@ import java.util.List;
 public class FileService {
     private final FileRepository fileRepository;
 
-    public FileService(){
+    public FileService() {
         fileRepository = new HibernateFileRepositoryImpl();
     }
 

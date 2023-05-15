@@ -58,7 +58,7 @@ public class HibernateFileRepositoryImpl implements FileRepository {
             session.beginTransaction();
             Query query = session.createQuery(hql);
             query.setParameter("id", integer);
-            if(query.executeUpdate() > 0){
+            if (query.executeUpdate() > 0) {
                 return true;
             }
             session.getTransaction().commit();

@@ -1,5 +1,6 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -15,11 +16,16 @@ public class User {
     @Column(name = "name")
     private String name;
 
+    @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private List<Event> events;
 
     public User() {
+    }
+
+    public User(String name) {
+        this.name = name;
     }
 
     public Integer getId() {

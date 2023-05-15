@@ -19,6 +19,11 @@ public class File {
     public File() {
     }
 
+    public File(String name, String filePath) {
+        this.name = name;
+        this.filePath = filePath;
+    }
+
     public Integer getId() {
         return id;
     }

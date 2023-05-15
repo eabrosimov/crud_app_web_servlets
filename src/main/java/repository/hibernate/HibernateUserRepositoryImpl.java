@@ -49,7 +49,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
         User user;
         String hql = "from User u left join fetch u.events where u.id = :id";
         try (Session session = HibernateUtils.getSession()) {
-            Query<User> query =  session.createQuery(hql, User.class);
+            Query<User> query = session.createQuery(hql, User.class);
             query.setParameter("id", integer);
             user = query.getSingleResultOrNull();
         }
@@ -64,7 +64,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
             session.beginTransaction();
             Query query = session.createQuery(hql);
             query.setParameter("id", integer);
-            if(query.executeUpdate() > 0){
+            if (query.executeUpdate() > 0) {
                 return true;
             }
             session.getTransaction().commit();

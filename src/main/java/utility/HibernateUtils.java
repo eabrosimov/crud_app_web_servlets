@@ -22,7 +22,7 @@ public class HibernateUtils {
         return sessionFactory;
     }
 
-    public static Session getSession(){
+    public static Session getSession() {
         return getSessionFactory().openSession();
     }
 
