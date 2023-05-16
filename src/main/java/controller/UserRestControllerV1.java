@@ -43,10 +43,10 @@ public class UserRestControllerV1 extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         PrintWriter writer = resp.getWriter();
-        String paramId = req.getPathInfo();
-        if (paramId != null) {
-            if (NumberValidator.isInteger(paramId.substring(1))) {
-                int id = Integer.parseInt(paramId.substring(1));
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null) {
+            if (NumberValidator.isInteger(pathInfo.substring(1))) {
+                int id = Integer.parseInt(pathInfo.substring(1));
                 User user = userService.getById(id);
                 if (user != null) {
                     writer.println(objectMapper.writeValueAsString(user));
@@ -84,9 +84,9 @@ public class UserRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        String paramId = req.getPathInfo();
-        if (paramId != null && NumberValidator.isInteger(paramId.substring(1))) {
-            int id = Integer.parseInt(paramId.substring(1));
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null && NumberValidator.isInteger(pathInfo.substring(1))) {
+            int id = Integer.parseInt(pathInfo.substring(1));
             if (userService.deleteById(id)) {
                 return;
             }

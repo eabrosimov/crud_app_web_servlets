@@ -34,7 +34,7 @@ public class FileRestControllerV1 extends HttpServlet {
         BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
         Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
-        String userId = jsonElements.get("id");
+        String userId = req.getHeader("id");
         String fileName = jsonElements.get("name");
         String filePath = jsonElements.get("filePath");
         if (req.getPathInfo() == null && NameValidator.isValidFileName(fileName)
@@ -55,10 +55,10 @@ public class FileRestControllerV1 extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         PrintWriter writer = resp.getWriter();
-        String paramId = req.getPathInfo();
-        if (paramId != null) {
-            if (NumberValidator.isInteger(paramId.substring(1))) {
-                int id = Integer.parseInt(paramId.substring(1));
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null) {
+            if (NumberValidator.isInteger(pathInfo.substring(1))) {
+                int id = Integer.parseInt(pathInfo.substring(1));
                 File file = fileService.getById(id);
                 if (file != null) {
                     writer.println(objectMapper.writeValueAsString(file));
@@ -78,11 +78,11 @@ public class FileRestControllerV1 extends HttpServlet {
         BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
         Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
-        String paramId = jsonElements.get("id");
+        String id = jsonElements.get("id");
         String name = jsonElements.get("name");
         String filePath = jsonElements.get("filePath");
-        if (req.getPathInfo() == null && NumberValidator.isInteger(paramId)) {
-            File file = fileService.getById(Integer.parseInt(paramId));
+        if (req.getPathInfo() == null && NumberValidator.isInteger(id)) {
+            File file = fileService.getById(Integer.parseInt(id));
             if (file != null && name != null) {
                 if (NameValidator.isValidFileName(name)) {
                     file.setName(name);
@@ -110,9 +110,9 @@ public class FileRestControllerV1 extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        String paramId = req.getPathInfo();
-        if (paramId != null && NumberValidator.isInteger(paramId.substring(1))) {
-            int id = Integer.parseInt(paramId.substring(1));
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null && NumberValidator.isInteger(pathInfo.substring(1))) {
+            int id = Integer.parseInt(pathInfo.substring(1));
             if (fileService.deleteById(id)) {
                 return;
             }
