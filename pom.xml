@@ -16,17 +16,26 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
-    <junit.version>4.11</junit.version>
+    <junit.jupiter.version>5.9.3</junit.jupiter.version>
+    <mokito.junit.jupite.version>5.3.1</mokito.junit.jupite.version>
     <postgresql.version>42.6.0</postgresql.version>
     <hibernate.core.version>6.2.2.Final</hibernate.core.version>
     <javax.servlet.version>4.0.1</javax.servlet.version>
+    <jackson.core.version>2.15.0</jackson.core.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mokito.junit.jupite.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -52,7 +61,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.15.0</version>
+      <version>${jackson.core.version}</version>
     </dependency>
 
   </dependencies>

@@ -12,6 +12,9 @@ public class UserService {
     public UserService() {
         userRepository = new HibernateUserRepositoryImpl();
     }
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public User save(User user) {
         return userRepository.save(user);

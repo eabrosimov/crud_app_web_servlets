@@ -16,12 +16,4 @@ public class NameValidator {
 
         return false;
     }
-
-    public static boolean isValidFilePath(String filePath) {
-        if (filePath != null && !filePath.isEmpty() && !filePath.isBlank() && filePath.length() <= 100) {
-            return filePath.matches("[a-zA-Z]:\\\\[^/:*?<>|]+\\\\");
-        }
-
-        return false;
-    }
 }

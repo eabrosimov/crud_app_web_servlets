@@ -1,26 +1,27 @@
-package model;
+package dto;
 
-import jakarta.persistence.*;
+import model.File;
 
-@Entity
-@Table(name = "file")
-public class File {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class FileDto {
     private Integer id;
-
-    @Column(name = "name")
     private String name;
-
-    @Column(name = "file_path")
     private String filePath;
 
-    public File() {
-    }
-
-    public File(String name, String filePath) {
+    public FileDto(Integer id, String name, String filePath) {
+        this.id = id;
         this.name = name;
         this.filePath = filePath;
+    }
+
+    public static FileDto getFileDtoFromEntity(File file){
+        return new FileDto(file.getId(), file.getName(), file.getFilePath());
+    }
+
+    public static List<FileDto> getFileDtoListFromEntity(List<File> files){
+        return files.stream().map(FileDto::getFileDtoFromEntity).collect(Collectors.toList());
     }
 
     public Integer getId() {
@@ -49,7 +50,7 @@ public class File {
 
     @Override
     public String toString() {
-        return "File{" +
+        return "FileDto{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", filePath='" + filePath + '\'' +

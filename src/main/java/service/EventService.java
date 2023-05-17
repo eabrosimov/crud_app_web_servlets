@@ -13,6 +13,10 @@ public class EventService {
         eventRepository = new HibernateEventRepositoryImpl();
     }
 
+    public EventService(EventRepository eventRepository){
+        this.eventRepository = eventRepository;
+    }
+
     public Event save(Event event) {
         return eventRepository.save(event);
     }

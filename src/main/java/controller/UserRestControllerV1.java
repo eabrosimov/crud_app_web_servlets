@@ -2,6 +2,7 @@ package controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.UserDto;
 import model.User;
 import service.UserService;
 import utility.NameValidator;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 @WebServlet("/v1/users/*")
 public class UserRestControllerV1 extends HttpServlet {
-    UserService userService = new UserService();
+    private final UserService userService = new UserService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -32,10 +33,11 @@ public class UserRestControllerV1 extends HttpServlet {
             User user = new User(name);
             user = userService.save(user);
             if (user != null) {
-                writer.println(objectMapper.writeValueAsString(user));
+                writer.println(objectMapper.writeValueAsString(UserDto.getUserDtoFromEntity(user)));
                 return;
             }
         }
+
         resp.setStatus(404);
     }
 
@@ -49,14 +51,14 @@ public class UserRestControllerV1 extends HttpServlet {
                 int id = Integer.parseInt(pathInfo.substring(1));
                 User user = userService.getById(id);
                 if (user != null) {
-                    writer.println(objectMapper.writeValueAsString(user));
+                    writer.println(objectMapper.writeValueAsString(UserDto.getUserDtoFromEntity(user)));
                     return;
                 }
             }
             resp.setStatus(404);
         } else {
             List<User> users = userService.getAll();
-            writer.println(objectMapper.writeValueAsString(users));
+            writer.println(objectMapper.writeValueAsString(UserDto.getUserDtoListFromEntity(users)));
         }
     }
 
@@ -66,15 +68,15 @@ public class UserRestControllerV1 extends HttpServlet {
         BufferedReader reader = req.getReader();
         PrintWriter writer = resp.getWriter();
         Map<String, String> jsonElements = objectMapper.readValue(reader, new TypeReference<>() {});
-        String paramId = jsonElements.get("id");
+        String id = jsonElements.get("id");
         String name = jsonElements.get("name");
-        if (req.getPathInfo() == null && NumberValidator.isInteger(paramId) && NameValidator.isValidUserName(name)) {
-            User user = userService.getById(Integer.parseInt(paramId));
+        if (req.getPathInfo() == null && NumberValidator.isInteger(id) && NameValidator.isValidUserName(name)) {
+            User user = userService.getById(Integer.parseInt(id));
             if (user != null) {
                 user.setName(name);
                 user = userService.update(user);
                 if (user != null) {
-                    writer.println(objectMapper.writeValueAsString(user));
+                    writer.println(objectMapper.writeValueAsString(UserDto.getUserDtoFromEntity(user)));
                     return;
                 }
             }

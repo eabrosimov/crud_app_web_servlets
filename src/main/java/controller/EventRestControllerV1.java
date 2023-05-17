@@ -1,6 +1,7 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.EventDto;
 import model.Event;
 import service.EventService;
 import utility.NumberValidator;
@@ -15,7 +16,7 @@ import java.util.List;
 
 @WebServlet("/v1/events/*")
 public class EventRestControllerV1 extends HttpServlet {
-    EventService eventService = new EventService();
+    private final EventService eventService = new EventService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -27,14 +28,14 @@ public class EventRestControllerV1 extends HttpServlet {
                 int id = Integer.parseInt(pathInfo.substring(1));
                 Event event = eventService.getById(id);
                 if (event != null) {
-                    writer.println(objectMapper.writeValueAsString(event));
+                    writer.println(objectMapper.writeValueAsString(EventDto.getEventDtoFromEntity(event)));
                     return;
                 }
             }
             resp.setStatus(404);
         } else {
             List<Event> events = eventService.getAll();
-            writer.println(objectMapper.writeValueAsString(events));
+            writer.println(objectMapper.writeValueAsString(EventDto.getEventDtoListFromEntity(events)));
         }
     }
 
